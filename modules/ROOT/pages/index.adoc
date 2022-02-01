@@ -1,0 +1,333 @@
+= The Neo4j Kerberos Add-On
+:sectnums:
+:toc:
+:toclevels: 4
+ifdef::backend-pdf[:notitle:]
+
+:neo4j-buildnumber: {neo4j-version}
+:download-url: https://neo4j.com
+
+ifdef::backend-pdf[]
+[discrete]
+= {doctitle}
+endif::[]
+v{kerberos-addon-version}
+
+
+ifdef::backend-html5[(C) {copyright}]
+ifndef::backend-pdf[]
+
+Documentation license: link:{common-license-page-uri}[Creative Commons 4.0]
+endif::[]
+ifdef::backend-pdf[]
+(C) {copyright}
+
+Documentation license: <<license, Creative Commons 4.0>>
+
+endif::[]
+
+[abstract]
+--
+This is the documentation for the Neo4j Kerberos Add-On, authored by the Neo4j Team.
+--
+
+
+[[add-on-kerberos-introduction]]
+== Introduction
+
+Kerberos is a network authentication protocol that allows the network node to prove its identity over the network.
+It does so by using a Key Distribution Center (KDC) to ensure that the client identity is correct.
+In addition to security, Kerberos also supports single sign-on.
+This allows for granting users access to the database after signing in to the computer, thus providing simplicity for users.
+
+Neo4j supports the use of Kerberos, using the _Neo4j Kerberos Add-On_ described in this manual.
+
+
+[[add-on-kerberos-deployment]]
+== Deployment
+
+The official Neo4j Kerberos add-on can be used to extend Neo4j with Kerberos authentication.
+The add-on provides authentication and should be used in conjunction with another provider such as LDAP for authorization.
+It is available for download at http://neo4j.com/download/other-releases[the Neo4j download site].
+
+[NOTE]
+.Compatibility
+====
+The Neo4j Kerberos add-on v{kerberos-addon-version} is compatible with Neo4j 3.1.1 and above.
+====
+
+We walk you through the deployment of Kerberos add-on in the following section.
+It consists of several steps:
+
+// * Download the Kerberos add-on
+* Configure Neo4j for Kerberos
+* Generate the Kerberos _keytab_ file
+* Configure the Kerberos add-on
+
+For file locations, please refer to <<operations-manual#file-locations, Operations Manual -> File Locations>>.
+All relative paths in this document are resolved against the _neo4j-home_ directory.
+
+In the examples, we are using Kerberos on Windows.
+We assume that LDAP is used for authorization, and that the current realm (Windows domain) is `WINDOMAIN.LOCAL`.
+
+
+[discrete]
+[[add-on-kerberos-configure]]
+=== Configure Neo4j for Kerberos
+
+Place the _kerberos-add-on.jar_ file in the <<operations-manual#file-locations, _plugins/_>> directory of your Neo4j installation.
+Edit _neo4j.conf_ to enable the Kerberos add-on as authentication provider.
+
+.Configure _neo4j.conf_
+====
+
+[source, properties]
+----
+#For authentication with kerberos-add-on
+dbms.security.auth_providers=ldap,plugin-Neo4j-Kerberos
+dbms.security.ldap.authentication_enabled=false
+dbms.security.plugin.authorization_enabled=false
+
+#For authorization with LDAP
+dbms.security.ldap.host=ad.windomain.local
+dbms.security.ldap.authorization.use_system_account=true
+dbms.security.ldap.authorization.system_username=CN=neo4jservice,OU=IT-Services,DC=windomain,DC=local
+dbms.security.ldap.authorization.system_password=PASSWORD
+dbms.security.ldap.authorization.user_search_base=CN=Users,DC=windomain,DC=local
+dbms.security.ldap.authorization.user_search_filter=(&(objectClass=*)(SamAccountName={0}))
+dbms.security.ldap.authorization.group_membership_attributes=memberOf
+dbms.security.ldap.authorization.group_to_role_mapping= \
+  "CN=Neo4j Read Only,CN=Users,DC=windomain,DC=local"      = reader; \
+  "CN=Neo4j Read-Write,CN=Users,DC=windomain,DC=local"     = publisher; \
+  "CN=Neo4j Schema Manager,CN=Users,DC=windomain,DC=local" = architect; \
+  "CN=Neo4j Administrator,CN=Users,DC=windomain,DC=local"  = admin; \
+  "CN=Neo4j Procedures,CN=Users,DC=windomain,DC=local"     = allowed_role
+----
+====
+
+
+
+[discrete]
+=== Generate the Kerberos _keytab_ file
+
+Create a service user for the Neo4j server in the KDC.
+Make sure to generate a _keytab_ for the Neo4j service user and place it in the _conf_ directory.
+In this example, we name it _neo4j.ktab_.
+The _keytab_ will be used by Neo4j.
+
+
+[discrete]
+=== Configure the Kerberos add-on
+
+If you have already been using Kerberos through the Heimdal or MIT tool `kinit`, you have a _krb5.conf_ file that contains information on how to reach the KDC.
+If you do not have such a file, or do not wish to use it, create a new _krb5.conf_ file in the _conf_ directory.
+
+.Configure _krb5.conf_
+====
+In this example, we are using a realm of `WINDOMAIN.LOCAL` and an IP address for the KDC and admin server of `192.168.38.2`.
+
+Replace these with your actual realm and the actual IP or domain name of your KDC and admin server, respectively.
+
+[source, properties]
+----
+[libdefaults]
+	default_realm = WINDOMAIN.LOCAL
+
+	default_tgs_enctypes = rc4-hmac rc4-hmac-exp aes128-cts-hmac-sha1-96 aes256-cts-hmac-sha1-96 des3-hmac-sha1
+	default_tkt_enctypes = rc4-hmac rc4-hmac-exp aes128-cts-hmac-sha1-96 aes256-cts-hmac-sha1-96 des3-hmac-sha1
+	permitted_enctypes = rc4-hmac rc4-hmac-exp aes128-cts-hmac-sha1-96 aes256-cts-hmac-sha1-96 des3-hmac-sha1
+
+[realms]
+	WINDOMAIN.LOCAL = {
+		kdc = 192.168.38.2
+		admin_server = 192.168.38.2
+	}
+
+[domain_realm]
+	.windomain.local = WINDOMAIN.LOCAL
+	windomain.local = WINDOMAIN.LOCAL
+----
+====
+
+[NOTE]
+====
+Some cryptographic algorithms are not natively supported by Java.
+When using the more advanced cryptographic algorithms (for example `ASE-256`) ensure that the Java that is running Neo4j have the `Java Cryptography Extension` extension enabled.
+====
+
+Now create a second file called _kerberos.conf_ in the _conf_ directory.
+The `keytab` setting refers to the _keytab_ file created above.
+The `service.principal` setting is the principal in that keytab, and the `krb5.conf` setting refers to the _krb5.conf_ file (already present from the existing Kerberos installation, or created in the step above).
+
+Again, replace the values with the correct values according to your setup.
+
+.Configure _kerberos.conf_
+====
+
+[source, properties]
+----
+realm=WINDOMAIN.LOCAL
+keytab=conf/neo4j.ktab
+service.principal=neo4j/neo4j.windomain.local@WINDOMAIN.LOCAL
+krb5.conf=conf/krb5.conf
+----
+====
+
+
+[[add-on-kerberos-usage]]
+== Usage
+
+Client application code that is to use Kerberos for authentication must to authenticate against the KDC and acquire a service ticket for the Neo4j service (in our example: `neo4j/neo4j.windomain.local@WINDOMAIN.LOCAL`).
+The service ticket must use the `Kerberos v5 (1.2.840.113554.1.2.2)` mechanism either directly or wrapped in `SPNEGO (1.3.6.1.5.5.2)`.
+
+The service ticket should be provided to the Neo4j driver in an auth token with the following properties:
+
+* Principal: empty
+* Credentials: the Base64-encoded service ticket
+* Realm: `add-on-Neo4j-Kerberos`
+
+[NOTE]
+====
+Please note that the Kerberos add-on does not currently work with the Neo4j Browser.
+It only work with applications using the Neo4j drivers.
+====
+
+
+[discrete]
+=== Example code
+
+.Example using Java
+====
+
+This is an example implementation using the 1.3 Java driver.
+
+[source, java]
+----
+public void connect()
+{
+	byte[] serviceTicket = get( serviceDomainName );
+
+	String scheme = "ticket";
+	String realm = "add-on-Neo4j-Kerberos";
+	String encodedServiceTicket = Base64.getEncoder().encodeToString( serviceTicket );
+  AuthToken token = AuthTokens.custom( encodedServiceTicket );
+
+	try ( Driver driver = GraphDatabase.driver( "bolt://" + serviceDomainName, token ) )
+	{
+		// do interesting things
+	}
+}
+
+public byte[] get( String serviceDomainName ) throws LoginException, GSSException
+{
+	Map<String,String> options = Collections.singletonMap( "useTicketCache", "true" );
+	Krb5Configuration loginContextConfiguration = new Krb5Configuration( options );
+	LoginContext loginContext = new LoginContext(
+	    "KerberosClient",
+	    null, // this is the subject
+	    null, // no need for this
+	    loginContextConfiguration
+	  );
+	loginContext.login();
+
+	return getServiceTicket( loginContext.getSubject(), "neo4j@" + serviceDomainName );
+}
+public static final Oid SPNEGO_OID = getOid( "1.3.6.1.5.5.2" );
+public byte[] getServiceTicket( Subject subject, String servicePrincipalName ) throws GSSException
+{
+	GSSManager manager = GSSManager.getInstance();
+	GSSName serverName = manager.createName( servicePrincipalName, GSSName.NT_HOSTBASED_SERVICE );
+	final GSSContext context = manager.createContext(
+					serverName, SPNEGO_OID, null, GSSContext.DEFAULT_LIFETIME );
+	// The GSS context initiation has to be performed as a privileged action.
+	return Subject.doAs( subject, new PrivilegedAction<byte[]>()
+	{
+		public byte[] run()
+		{
+			try
+			{
+				// This is a one pass context initialisation.
+				context.requestMutualAuth( false );
+				context.requestCredDeleg( false );
+				return context.initSecContext( new byte[0], 0, 0 );
+			}
+			catch ( GSSException e )
+			{
+				e.printStackTrace();
+				return null;
+			}
+		}
+	} );
+}
+
+private class Krb5Configuration extends Configuration
+{
+	private final AppConfigurationEntry[] configList;
+
+	public Krb5Configuration( Map<String,String> options )
+	{
+		this.configList = new AppConfigurationEntry[1];
+		configList[0] =
+		    new AppConfigurationEntry(
+		        "com.sun.security.auth.module.Krb5LoginModule",
+		        AppConfigurationEntry.LoginModuleControlFlag.REQUIRED,
+		        options
+		    );
+	}
+
+	@Override
+	public AppConfigurationEntry[] getAppConfigurationEntry( String name )
+	{
+	    return configList;
+	}
+}
+----
+
+====
+
+.Example using C#
+====
+
+This is an example implementation using C# with the 1.3 .NET driver.
+
+[source, csharp]
+----
+var token = AuthTokens.kerberos(getTicket("neo4j"));
+	using (var driver = GraphDatabase.Driver("bolt://neo4j.windomain.local:7687", token))
+	{
+		try
+		{
+			using (var session = driver.Session())
+				{
+					var result = session.Run("MATCH () RETURN count(*) AS count");
+					foreach (var record in result)
+					{
+						Console.WriteLine($"Nodecount: {record["count"].As<string>()}");
+					}
+				}
+		}
+		catch (Exception e)
+		{
+			Console.WriteLine($"Error: {e.Message}");
+		}
+}
+
+ private static String getTicket(string serviceName)
+ {
+	AppDomain.CurrentDomain.SetPrincipalPolicy(System.Security.Principal.PrincipalPolicy.WindowsPrincipal);
+	var domain = Domain.GetCurrentDomain().ToString();
+
+	using (var domainContext = new PrincipalContext(ContextType.Domain, domain))
+	{
+		string spn = UserPrincipal.FindByIdentity(domainContext, IdentityType.SamAccountName, serviceName).UserPrincipalName;
+		Console.WriteLine("Service Principale name: " + spn);
+		KerberosSecurityTokenProvider tokenProvider = new KerberosSecurityTokenProvider(spn);
+		KerberosRequestorSecurityToken securityToken = tokenProvider.GetToken(TimeSpan.FromMinutes(1)) as KerberosRequestorSecurityToken;
+		var token = securityToken.GetRequest();
+		String ticket = Convert.ToBase64String(token);
+		return ticket;
+	}
+ }
+
+----
+====

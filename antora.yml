@@ -1,7 +1,7 @@
-name: add-on/kerberos
+name: kerberos
 title: Neo4j Kerberos Add-On
-version: '1.0.2'
-display_version: 1.0.2
+version: '1.0'
+display_version: 1.0
 start_page: ROOT:index.adoc
 nav:
 - modules/ROOT/content-nav.adoc

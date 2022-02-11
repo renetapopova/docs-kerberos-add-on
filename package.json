@@ -1,0 +1,46 @@
+{
+  "name": "kerberos",
+  "version": "1.0.0",
+  "description": "Neo4j Kerberos Add-on",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "npm run build && npm run serve & npm-watch build",
+    "serve": "node server.js",
+    "build": "antora preview.yml --stacktrace --log-format=pretty"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/neo4j/docs-kerberos-add-on.git"
+  },
+  "keywords": [
+    "antora",
+    "neo4j"
+  ],
+  "author": "Neo4j",
+  "license": "ISC",
+  "dependencies": {
+    "@antora/cli": "^3.0.0",
+    "@antora/site-generator-default": "^3.0.0",
+    "@neo4j-antora/antora-add-notes": "^0.1.6",
+    "@neo4j-antora/antora-modify-sitemaps": "^0.3.3",
+    "@neo4j-documentation/macros": "^1.0.0",
+    "@neo4j-documentation/remote-include": "^1.0.0"
+  },
+  "watch": {
+    "build": {
+      "patterns": [
+        "modules"
+      ],
+      "extensions": "adoc"
+    }
+  },
+  "devDependencies": {
+    "cheerio": "^1.0.0-rc.3",
+    "dotenv": "^10.0.0",
+    "express": "^4.17.1",
+    "hyperlink": "^4.6.0",
+    "neo4j-driver": "^4.3.2",
+    "npm-watch": "^0.6.0"
+  }
+}

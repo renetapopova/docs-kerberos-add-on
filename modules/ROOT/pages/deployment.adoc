@@ -1,0 +1,128 @@
+[[add-on-kerberos-deployment]]
+= Deployment
+
+The official Neo4j Kerberos Add-on can be used to extend Neo4j with Kerberos authentication.
+The add-on provides authentication and should be used in conjunction with another provider such as LDAP for authorization.
+It is available for download at http://neo4j.com/download/other-releases[the Neo4j download site].
+
+[NOTE]
+.Compatibility
+====
+The Neo4j Kerberos Add-on v{kerberos-addon-version} is compatible with Neo4j 3.1.1 and above.
+====
+
+We walk you through the deployment of Kerberos Add-on in the following section.
+It consists of several steps:
+
+// * Download the Kerberos Add-on
+* Configure Neo4j for Kerberos
+* Generate the Kerberos _keytab_ file
+* Configure the Kerberos Add-on
+
+For file locations, please refer to <<operations-manual#file-locations, Operations Manual -> File Locations>>.
+All relative paths in this document are resolved against the _neo4j-home_ directory.
+
+In the examples, we are using Kerberos on Windows.
+We assume that LDAP is used for authorization, and that the current realm (Windows domain) is `WINDOMAIN.LOCAL`.
+
+
+[discrete]
+[[add-on-kerberos-configure]]
+== Configure Neo4j for Kerberos
+
+Place the _kerberos-add-on.jar_ file in the <<operations-manual#file-locations, _plugins/_>> directory of your Neo4j installation.
+Edit _neo4j.conf_ to enable the Kerberos Add-on as authentication provider.
+
+.Configure _neo4j.conf_
+====
+
+[source, properties]
+----
+#For authentication with kerberos-add-on
+dbms.security.auth_providers=ldap,plugin-Neo4j-Kerberos
+dbms.security.ldap.authentication_enabled=false
+dbms.security.plugin.authorization_enabled=false
+
+#For authorization with LDAP
+dbms.security.ldap.host=ad.windomain.local
+dbms.security.ldap.authorization.use_system_account=true
+dbms.security.ldap.authorization.system_username=CN=neo4jservice,OU=IT-Services,DC=windomain,DC=local
+dbms.security.ldap.authorization.system_password=PASSWORD
+dbms.security.ldap.authorization.user_search_base=CN=Users,DC=windomain,DC=local
+dbms.security.ldap.authorization.user_search_filter=(&(objectClass=*)(SamAccountName={0}))
+dbms.security.ldap.authorization.group_membership_attributes=memberOf
+dbms.security.ldap.authorization.group_to_role_mapping= \
+  "CN=Neo4j Read Only,CN=Users,DC=windomain,DC=local"      = reader; \
+  "CN=Neo4j Read-Write,CN=Users,DC=windomain,DC=local"     = publisher; \
+  "CN=Neo4j Schema Manager,CN=Users,DC=windomain,DC=local" = architect; \
+  "CN=Neo4j Administrator,CN=Users,DC=windomain,DC=local"  = admin; \
+  "CN=Neo4j Procedures,CN=Users,DC=windomain,DC=local"     = allowed_role
+----
+====
+
+
+[discrete]
+== Generate the Kerberos _keytab_ file
+
+Create a service user for the Neo4j server in the KDC.
+Make sure to generate a _keytab_ for the Neo4j service user and place it in the _conf_ directory.
+In this example, we name it _neo4j.ktab_.
+The _keytab_ will be used by Neo4j.
+
+
+[discrete]
+== Configure the Kerberos Add-on
+
+If you have already been using Kerberos through the Heimdal or MIT tool `kinit`, you have a _krb5.conf_ file that contains information on how to reach the KDC.
+If you do not have such a file, or do not wish to use it, create a new _krb5.conf_ file in the _conf_ directory.
+
+.Configure _krb5.conf_
+====
+In this example, we are using a realm of `WINDOMAIN.LOCAL` and an IP address for the KDC and admin server of `192.168.38.2`.
+
+Replace these with your actual realm and the actual IP or domain name of your KDC and admin server, respectively.
+
+[source, properties]
+----
+[libdefaults]
+	default_realm = WINDOMAIN.LOCAL
+
+	default_tgs_enctypes = rc4-hmac rc4-hmac-exp aes128-cts-hmac-sha1-96 aes256-cts-hmac-sha1-96 des3-hmac-sha1
+	default_tkt_enctypes = rc4-hmac rc4-hmac-exp aes128-cts-hmac-sha1-96 aes256-cts-hmac-sha1-96 des3-hmac-sha1
+	permitted_enctypes = rc4-hmac rc4-hmac-exp aes128-cts-hmac-sha1-96 aes256-cts-hmac-sha1-96 des3-hmac-sha1
+
+[realms]
+	WINDOMAIN.LOCAL = {
+		kdc = 192.168.38.2
+		admin_server = 192.168.38.2
+	}
+
+[domain_realm]
+	.windomain.local = WINDOMAIN.LOCAL
+	windomain.local = WINDOMAIN.LOCAL
+----
+====
+
+[NOTE]
+====
+Some cryptographic algorithms are not natively supported by Java.
+When using the more advanced cryptographic algorithms (for example `ASE-256`) ensure that the Java that is running Neo4j have the `Java Cryptography Extension` extension enabled.
+====
+
+Now create a second file called _kerberos.conf_ in the _conf_ directory.
+The `keytab` setting refers to the _keytab_ file created above.
+The `service.principal` setting is the principal in that keytab, and the `krb5.conf` setting refers to the _krb5.conf_ file (already present from the existing Kerberos installation, or created in the step above).
+
+Again, replace the values with the correct values according to your setup.
+
+.Configure _kerberos.conf_
+====
+
+[source, properties]
+----
+realm=WINDOMAIN.LOCAL
+keytab=conf/neo4j.ktab
+service.principal=neo4j/neo4j.windomain.local@WINDOMAIN.LOCAL
+krb5.conf=conf/krb5.conf
+----
+====

@@ -1,0 +1,157 @@
+[[add-on-kerberos-usage]]
+= Usage
+
+Client application code that is to use Kerberos for authentication must to authenticate against the KDC and acquire a service ticket for the Neo4j service (in our example: `neo4j/neo4j.windomain.local@WINDOMAIN.LOCAL`).
+The service ticket must use the `Kerberos v5 (1.2.840.113554.1.2.2)` mechanism either directly or wrapped in `SPNEGO (1.3.6.1.5.5.2)`.
+
+The service ticket should be provided to the Neo4j driver in an auth token with the following properties:
+
+* Principal: empty
+* Credentials: the Base64-encoded service ticket
+* Realm: `add-on-Neo4j-Kerberos`
+
+[NOTE]
+====
+Please note that the Kerberos Add-on does not currently work with the Neo4j Browser.
+It only work with applications using the Neo4j drivers.
+====
+
+
+[discrete]
+== Example code
+
+.Example using Java
+====
+
+This is an example implementation using the 1.3 Java driver.
+
+[source, java]
+----
+public void connect()
+{
+	byte[] serviceTicket = get( serviceDomainName );
+
+	String scheme = "ticket";
+	String realm = "add-on-Neo4j-Kerberos";
+	String encodedServiceTicket = Base64.getEncoder().encodeToString( serviceTicket );
+  AuthToken token = AuthTokens.custom( encodedServiceTicket );
+
+	try ( Driver driver = GraphDatabase.driver( "bolt://" + serviceDomainName, token ) )
+	{
+		// do interesting things
+	}
+}
+
+public byte[] get( String serviceDomainName ) throws LoginException, GSSException
+{
+	Map<String,String> options = Collections.singletonMap( "useTicketCache", "true" );
+	Krb5Configuration loginContextConfiguration = new Krb5Configuration( options );
+	LoginContext loginContext = new LoginContext(
+	    "KerberosClient",
+	    null, // this is the subject
+	    null, // no need for this
+	    loginContextConfiguration
+	  );
+	loginContext.login();
+
+	return getServiceTicket( loginContext.getSubject(), "neo4j@" + serviceDomainName );
+}
+public static final Oid SPNEGO_OID = getOid( "1.3.6.1.5.5.2" );
+public byte[] getServiceTicket( Subject subject, String servicePrincipalName ) throws GSSException
+{
+	GSSManager manager = GSSManager.getInstance();
+	GSSName serverName = manager.createName( servicePrincipalName, GSSName.NT_HOSTBASED_SERVICE );
+	final GSSContext context = manager.createContext(
+					serverName, SPNEGO_OID, null, GSSContext.DEFAULT_LIFETIME );
+	// The GSS context initiation has to be performed as a privileged action.
+	return Subject.doAs( subject, new PrivilegedAction<byte[]>()
+	{
+		public byte[] run()
+		{
+			try
+			{
+				// This is a one pass context initialisation.
+				context.requestMutualAuth( false );
+				context.requestCredDeleg( false );
+				return context.initSecContext( new byte[0], 0, 0 );
+			}
+			catch ( GSSException e )
+			{
+				e.printStackTrace();
+				return null;
+			}
+		}
+	} );
+}
+
+private class Krb5Configuration extends Configuration
+{
+	private final AppConfigurationEntry[] configList;
+
+	public Krb5Configuration( Map<String,String> options )
+	{
+		this.configList = new AppConfigurationEntry[1];
+		configList[0] =
+		    new AppConfigurationEntry(
+		        "com.sun.security.auth.module.Krb5LoginModule",
+		        AppConfigurationEntry.LoginModuleControlFlag.REQUIRED,
+		        options
+		    );
+	}
+
+	@Override
+	public AppConfigurationEntry[] getAppConfigurationEntry( String name )
+	{
+	    return configList;
+	}
+}
+----
+
+====
+
+.Example using C#
+====
+
+This is an example implementation using C# with the 1.3 .NET driver.
+
+[source, csharp]
+----
+var token = AuthTokens.kerberos(getTicket("neo4j"));
+	using (var driver = GraphDatabase.Driver("bolt://neo4j.windomain.local:7687", token))
+	{
+		try
+		{
+			using (var session = driver.Session())
+				{
+					var result = session.Run("MATCH () RETURN count(*) AS count");
+					foreach (var record in result)
+					{
+						Console.WriteLine($"Nodecount: {record["count"].As<string>()}");
+					}
+				}
+		}
+		catch (Exception e)
+		{
+			Console.WriteLine($"Error: {e.Message}");
+		}
+}
+
+ private static String getTicket(string serviceName)
+ {
+	AppDomain.CurrentDomain.SetPrincipalPolicy(System.Security.Principal.PrincipalPolicy.WindowsPrincipal);
+	var domain = Domain.GetCurrentDomain().ToString();
+
+	using (var domainContext = new PrincipalContext(ContextType.Domain, domain))
+	{
+		string spn = UserPrincipal.FindByIdentity(domainContext, IdentityType.SamAccountName, serviceName).UserPrincipalName;
+		Console.WriteLine("Service Principale name: " + spn);
+		KerberosSecurityTokenProvider tokenProvider = new KerberosSecurityTokenProvider(spn);
+		KerberosRequestorSecurityToken securityToken = tokenProvider.GetToken(TimeSpan.FromMinutes(1)) as KerberosRequestorSecurityToken;
+		var token = securityToken.GetRequest();
+		String ticket = Convert.ToBase64String(token);
+		return ticket;
+	}
+ }
+
+----
+====

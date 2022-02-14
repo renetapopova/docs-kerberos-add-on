@@ -38,9 +38,8 @@ Edit _neo4j.conf_ to enable the Kerberos Add-on as authentication provider.
 [source, properties]
 ----
 #For authentication with kerberos-add-on
-dbms.security.auth_providers=ldap,plugin-Neo4j-Kerberos
-dbms.security.ldap.authentication_enabled=false
-dbms.security.plugin.authorization_enabled=false
+dbms.security.authentication_providers=plugin-Neo4j-Kerberos
+dbms.security.authorization_providers=ldap
 
 #For authorization with LDAP
 dbms.security.ldap.host=ad.windomain.local

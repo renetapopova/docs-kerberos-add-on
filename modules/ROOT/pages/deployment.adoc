@@ -8,7 +8,7 @@ It is available for download at http://neo4j.com/download/other-releases[the Neo
 [NOTE]
 .Compatibility
 ====
-The Neo4j Kerberos Add-on v{kerberos-add-on-version} is compatible with Neo4j 3.1.1 and above.
+The Neo4j Kerberos Add-on v{kerberos-add-on-version} is compatible with Neo4j v{neo4j-version-exact} and above.
 ====
 
 We walk you through the deployment of Kerberos Add-on in the following section.

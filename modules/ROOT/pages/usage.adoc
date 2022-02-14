@@ -13,11 +13,10 @@ The service ticket should be provided to the Neo4j driver in an auth token with 
 [NOTE]
 ====
 Please note that the Kerberos Add-on does not currently work with the Neo4j Browser.
-It only work with applications using the Neo4j drivers.
+It only works with applications using the Neo4j Drivers.
 ====
 
 
-[discrete]
 == Example code
 
 .Example using Java

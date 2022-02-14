@@ -26,7 +26,6 @@ In the examples, we are using Kerberos on Windows.
 We assume that LDAP is used for authorization, and that the current realm (Windows domain) is `WINDOMAIN.LOCAL`.
 
 
-[discrete]
 [[add-on-kerberos-configure]]
 == Configure Neo4j for Kerberos
 
@@ -61,7 +60,6 @@ dbms.security.ldap.authorization.group_to_role_mapping= \
 ====
 
 
-[discrete]
 == Generate the Kerberos _keytab_ file
 
 Create a service user for the Neo4j server in the KDC.
@@ -70,7 +68,6 @@ In this example, we name it _neo4j.ktab_.
 The _keytab_ will be used by Neo4j.
 
 
-[discrete]
 == Configure the Kerberos Add-on
 
 If you have already been using Kerberos through the Heimdal or MIT tool `kinit`, you have a _krb5.conf_ file that contains information on how to reach the KDC.

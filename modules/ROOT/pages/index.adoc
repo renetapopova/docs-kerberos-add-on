@@ -1,15 +1,14 @@
 :description: This is the manual for the Neo4j Kerberos Add-on.
 
 [[add-on-kerberos]]
-= The Neo4j Kerberos Add-on
-
+= The Neo4j Kerberos Add-on v{kerberos-add-on-version}
 
 ifndef::backend-pdf[]
-Documentation license: link:{common-license-page-uri}[Creative Commons 4.0]
+License: link:{common-license-page-uri}[Creative Commons 4.0]
 endif::[]
 
 ifdef::backend-pdf[]
-Documentation license: <<license, Creative Commons 4.0>>
+License: Creative Commons 4.0
 endif::[]
 
 This is the documentation for the Neo4j Kerberos Add-on, authored by the Neo4j Team.

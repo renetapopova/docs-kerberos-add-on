@@ -8,6 +8,7 @@ nav:
 asciidoc:
   attributes:
     page-origin-private: false
+    kerberos-add-on-version: '1.0.2'
     neo4j-version: '3.1'
     neo4j-version-exact: '3.1.1'
     neo4j-buildnumber: '3.1'

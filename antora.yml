@@ -1,4 +1,4 @@
-name: kerberos
+name: kerberos-add-on
 title: Neo4j Kerberos Add-On
 version: '1.0'
 display_version: 1.0

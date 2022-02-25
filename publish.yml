@@ -2,7 +2,7 @@
 site:
   title: Neo4j Kerberos Add-on
   url: https://neo4j.com/docs/kerberos-add-on
-  start_page: kerberos:ROOT:index.adoc
+  start_page: kerberos-add-on:ROOT:index.adoc
 
 content:
   sources:

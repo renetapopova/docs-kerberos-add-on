@@ -1,14 +1,13 @@
 name: kerberos-add-on
 title: Neo4j Kerberos Add-On
-version: '4.0'
-display_version: 4.0
+version: 'dev'
 start_page: ROOT:index.adoc
 nav:
 - modules/ROOT/content-nav.adoc
 asciidoc:
   attributes:
     page-origin-private: false
-    kerberos-add-on-version: '4.0.0'
+    kerberos-add-on-version: 'dev'
     neo4j-version: '4.0'
     neo4j-version-exact: '4.0.0'
     neo4j-buildnumber: '4.0'

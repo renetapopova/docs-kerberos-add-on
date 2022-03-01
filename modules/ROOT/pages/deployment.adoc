@@ -19,7 +19,7 @@ It consists of several steps:
 * Generate the Kerberos _keytab_ file
 * Configure the Kerberos Add-on
 
-For file locations, please refer to <<operations-manual#file-locations, Operations Manual -> File Locations>>.
+For file locations, please refer to link:{site-url}/operations-manual/current/configuration/file-locations[Operations Manual -> File Locations].
 All relative paths in this document are resolved against the _neo4j-home_ directory.
 
 In the examples, we are using Kerberos on Windows.
@@ -29,7 +29,7 @@ We assume that LDAP is used for authorization, and that the current realm (Windo
 [[add-on-kerberos-configure]]
 == Configure Neo4j for Kerberos
 
-Place the _kerberos-add-on.jar_ file in the <<operations-manual#file-locations, _plugins/_>> directory of your Neo4j installation.
+Place the _kerberos-add-on.jar_ file in the link:{site-url}/operations-manual/current/configuration/file-locations[_plugins/_] directory of your Neo4j installation.
 Edit _neo4j.conf_ to enable the Kerberos Add-on as authentication provider.
 
 .Configure _neo4j.conf_

@@ -6,9 +6,8 @@ The add-on provides authentication and should be used in conjunction with anothe
 It is available for download at http://neo4j.com/download/other-releases[the Neo4j download site].
 
 [NOTE]
-.Compatibility
 ====
-The Neo4j Kerberos Add-on v{kerberos-add-on-version} is compatible with Neo4j v{neo4j-version} and above.
+The Neo4j Kerberos Add-on v{kerberos-add-on-version} is compatible with all releases of Neo4j v4 and Neo4j v5.
 ====
 
 We walk you through the deployment of Kerberos Add-on in the following section.

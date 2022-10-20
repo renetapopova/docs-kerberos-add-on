@@ -1,4 +1,3 @@
 * xref:index.adoc[]
-** xref:introduction.adoc[]
 ** xref:deployment.adoc[]
 ** xref:usage.adoc[]

@@ -1,7 +1,22 @@
-:description: This is the manual for the Neo4j Kerberos Add-on.
+:description: This is the documentation for using the Neo4j Kerberos Add-on.
 
 [[add-on-kerberos]]
 = The Neo4j Kerberos Add-on v{kerberos-add-on-version}
+
+[[add-on-kerberos-introduction]]
+== Introduction
+
+Kerberos is a network authentication protocol that allows the network node to prove its identity over the network.
+It does so by using a Key Distribution Center (KDC) to ensure that the client identity is correct.
+In addition to security, Kerberos also supports single sign-on.
+This allows for granting users access to the database after signing in to the computer, thus providing simplicity for users.
+
+Neo4j supports the use of Kerberos, using the _Neo4j Kerberos Add-on_ described in this documentation.
+
+[NOTE]
+====
+The Neo4j Kerberos Add-on v{kerberos-add-on-version} is compatible with all releases of Neo4j v4 and Neo4j v5.
+====
 
 ifndef::backend-pdf[]
 License: link:{common-license-page-uri}[Creative Commons 4.0]
@@ -10,11 +25,3 @@ endif::[]
 ifdef::backend-pdf[]
 License: Creative Commons 4.0
 endif::[]
-
-This is the documentation for the Neo4j Kerberos Add-on, authored by the Neo4j Team.
-
-This manual covers the following areas:
-
-* xref:introduction.adoc[]
-* xref:deployment.adoc[]
-* xref:usage.adoc[]

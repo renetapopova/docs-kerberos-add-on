@@ -3,7 +3,7 @@
 
 The official Neo4j Kerberos Add-on can be used to extend Neo4j with Kerberos authentication.
 The add-on provides authentication and should be used in conjunction with another provider such as LDAP for authorization.
-It is available for download at http://neo4j.com/download/other-releases[the Neo4j download site].
+It is available for download at https://neo4j.com/download/other-releases[the Neo4j download site].
 
 [NOTE]
 ====
